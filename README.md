@@ -30,7 +30,42 @@ rpsls (rock-paper-scissors-lizard-spock) เป็น smart contract ที่�
   - ถ้าผู้เล่นทั้งสองคน reveal ระบบจะไม่อนุญาตให้กด withdraw  
 
 - **ถ้าเกมจบไปแล้ว**  
-  - ระบบจะรีให้อัตโนมัติ และสามารถเริ่มรอบใหม่ได้เลย  
+  - ระบบจะรีให้อัตโนมัติ และสามารถเริ่มรอบใหม่ได้เลย
+
+  ตัวอย่างโค้ด
+```solidity
+function Withdraw() public Onlyallowed {
+    require(Gameactive, "No active game");
+    require(
+      msg.sender == Players[0] || msg.sender == Players[1],
+      "Must be in game to withdraw"
+    );
+
+    if (Numinput == 0) {
+      require(block.timestamp >= Commitstarttime + 0, "Cannot withdraw now");
+      for (uint i = 0; i < Players.length; i++) {
+        payable(Players[i]).transfer(1 ether);
+      }
+      Resetgame();
+    } else if (Numinput == 1) {
+      address payable Withdrawer;
+      address payable Winner;
+
+      if (msg.sender == Players[0]) {
+        Withdrawer = payable(Players[0]);
+        Winner = payable(Players[1]);
+      } else if (msg.sender == Players[1]) {
+        Withdrawer = payable(Players[1]);
+        Winner = payable(Players[0]);
+      }
+
+      Winner.transfer(Reward);
+      Resetgame();
+    } else {
+      revert("Cannot withdraw at this stage");
+    }
+  }
+```
 
 ### 2. ซ่อน choice ของผู้เล่นก่อน reveal  
 ปัญหาของเกมบน blockchain คือทุกธุรกรรมจะเปิดเผยต่อสาธารณะ ถ้า submit ตัวเลือกไปตรงๆ ฝ่ายตรงข้ามสามารถดูได้และเลือก counter-move ได้ทันที วิธีแก้คือใช้ commit-reveal  
