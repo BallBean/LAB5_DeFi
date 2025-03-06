@@ -61,7 +61,8 @@ rpsls (rock-paper-scissors-lizard-spock) เป็น smart contract ที่�
 - จิ้งจก (lizard) ชนะ สป็อค (spock) และกระดาษ (paper)
 - สป็อค (spock) ชนะ ค้อน (rock) และกรรไกร (scissors)
 
-```function Getmoveresult(uint Movea, uint Moveb) private pure returns (uint) {
+```solidity
+    function Getmoveresult(uint Movea, uint Moveb) private pure returns (uint) {
         if (Movea == Moveb) return 0; // tie
         if (
             (Movea == 0 && (Moveb == 2 || Moveb == 3)) || // Rock crushes Scissors, Rock crushes Lizard
