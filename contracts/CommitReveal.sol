@@ -3,58 +3,62 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 contract CommitReveal {
+  uint8 public max = 100;
 
-    uint8 public max = 100;
+  struct Commit {
+    bytes32 commit;
+    uint64 block;
+    bool revealed;
+  }
 
-    struct Commit {
-        bytes32 commit;
-        uint64 block;
-        bool revealed;
-    }
+  mapping(address => Commit) public commits;
 
-    mapping (address => Commit) public commits;
+  function commit(bytes32 dataHash) public {
+    commits[msg.sender].commit = dataHash;
+    commits[msg.sender].block = uint64(block.number);
+    commits[msg.sender].revealed = false;
+    emit CommitHash(
+      msg.sender,
+      commits[msg.sender].commit,
+      commits[msg.sender].block
+    );
+  }
 
-    function commit(address sender, bytes32 dataHash) public {
-        require(sender != address(0), "Invalid sender address");
-        require(commits[sender].commit == bytes32(0), "Commit already exists"); // Prevent duplicate commits
+  event CommitHash(address sender, bytes32 dataHash, uint64 block);
 
-        commits[sender].commit = dataHash;
-        commits[sender].block = uint64(block.number);
-        commits[sender].revealed = false;
+  function reveal(bytes32 revealHash) public {
+    //make sure it hasn't been revealed yet and set it to revealed
+    require(
+      commits[msg.sender].revealed == false,
+      "CommitReveal::reveal: Already revealed"
+    );
+    commits[msg.sender].revealed = true;
+    //require that they can produce the committed hash
+    require(
+      getHash(revealHash) == commits[msg.sender].commit,
+      "CommitReveal::reveal: Revealed hash does not match commit"
+    );
+    //require that the block number is greater than the original block
+    require(
+      uint64(block.number) > commits[msg.sender].block,
+      "CommitReveal::reveal: Reveal and commit happened on the same block"
+    );
+    //require that no more than 250 blocks have passed
+    require(
+      uint64(block.number) <= commits[msg.sender].block + 250,
+      "CommitReveal::reveal: Revealed too late"
+    );
+    //get the hash of the block that happened after they committed
+    bytes32 blockHash = blockhash(commits[msg.sender].block);
+    //hash that with their reveal that so miner shouldn't know and mod it with some max number you want
+    uint random = uint(keccak256(abi.encodePacked(blockHash, revealHash))) %
+      max;
+    emit RevealHash(msg.sender, revealHash, random);
+  }
 
-        emit CommitHash(sender, commits[sender].commit, commits[sender].block);
-    }
+  event RevealHash(address sender, bytes32 revealHash, uint random);
 
-    event CommitHash(address sender, bytes32 dataHash, uint64 block);
-
-    function reveal(address sender, bytes32 revealHash) public {
-        require(commits[sender].commit != bytes32(0), "No commit found"); // Ensure a commit exists
-        require(!commits[sender].revealed, "CommitReveal::reveal: Already revealed");
-        
-        commits[sender].revealed = true;
-
-        require(
-            getHash(revealHash) == commits[sender].commit,
-            "CommitReveal::reveal: Revealed hash does not match commit"
-        );
-        require(
-            uint64(block.number) > commits[sender].block,
-            "CommitReveal::reveal: Reveal and commit happened on the same block"
-        );
-        require(
-            uint64(block.number) <= commits[sender].block + 250,
-            "CommitReveal::reveal: Revealed too late"
-        );
-
-        bytes32 blockHash = blockhash(commits[sender].block);
-        uint random = uint(keccak256(abi.encodePacked(blockHash, revealHash))) % max;
-        
-        emit RevealHash(sender, revealHash, random);
-    }
-
-    event RevealHash(address sender, bytes32 revealHash, uint random);
-
-    function getHash(bytes32 data) public pure returns(bytes32) {
-        return keccak256(abi.encodePacked(data));
-    }
+  function getHash(bytes32 data) public pure returns (bytes32) {
+    return keccak256(abi.encodePacked(data));
+  }
 }
