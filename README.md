@@ -96,4 +96,4 @@ rpsls (rock-paper-scissors-lizard-spock) เป็น smart contract ที่�
 4. ถ้ามีคนไม่ reveal ใช้ `Withdrawduringrevealphase()`  
 
 ## ในงานนี้ได้อ้างอิงจาก
-https://github.com/parujr/RPS 
+repository ของอาจารย์ Paruj Ratanaworabhan เป็นหลัก https://github.com/parujr/RPS 
