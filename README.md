@@ -46,13 +46,24 @@ rpsls (rock-paper-scissors-lizard-spock) เป็น smart contract ที่�
   - หากมีการ commit ครบ 2 คนแล้ว แต่มีเพียง 1 คนที่ reveal ให้ผู้เล่นที่ reveal ใช้ Withdraw() เพื่อปรับให้ตัวเองชนะ
   - หากไม่มีใคร reveal ภายในเวลาที่กำหนด ใช้ Resetgame() เพื่อคืนเงินและเปิดเกมใหม่
 
-ตัวอย่างโค้ดที่ใช้เช็คว่าชนะหรือแพ้
+ตัวอย่างโค้ด
 ```solidity
-if (!playerRevealed[players[0]]) {
-    winner = players[1];
-} else if (!playerRevealed[players[1]]) {
-    winner = players[0];
-}
+function Revealchoice(bytes32 Encodeddata) public Onlyallowed {
+    require(Gameactive, "No active game");
+    require(!Playerrevealed[msg.sender], "Already revealed");
+
+    reveal(Encodeddata);
+
+    bytes1 Lastbyte = Encodeddata[31];
+    uint8 Value = uint8(Lastbyte);
+    Playerchoice[msg.sender] = uint256(Value);
+    Playerrevealed[msg.sender] = true;
+    Numinput++;
+
+    if (Numinput == 2) {
+      Checkwinnerandpay();
+    }
+  }
 ```
 
 ### 4. ตรวจสอบผลแพ้ชนะจาก choice ที่ reveal  
